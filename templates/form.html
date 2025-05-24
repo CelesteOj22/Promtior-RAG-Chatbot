@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Chatbot RAG</title>
+</head>
+<body>
+    <h1>Preguntale al chatbot</h1>
+    <form method="post">
+        <label for="question">Escribí tu pregunta:</label><br/>
+        <input type="text" id="question" name="question" size="60" required
+            value="{{ question if question else '' }}" />
+        <button type="submit">Enviar</button>
+    </form>
+
+    {% if answer %}
+        <h2>Respuesta:</h2>
+        <p>{{ answer }}</p>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,8 @@
+# created by virtualenv automatically
+# .gitignore
+venv/
+.env
+__pycache__/
+promtior_index/
+*.pem
+.idea/
