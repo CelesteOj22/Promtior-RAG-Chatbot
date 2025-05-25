@@ -2,20 +2,118 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
-    <title>Chatbot RAG</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chatbot Promtior</title>
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #0B1D3A;
+            color: #FFFFFF;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .chat-box {
+            max-width: 800px;
+            margin: auto;
+            background: #0E254C;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+            height: 70vh;
+            overflow-y: auto;
+        }
+
+        .chat-bubble {
+            padding: 12px 18px;
+            border-radius: 18px;
+            margin-bottom: 10px;
+            max-width: 75%;
+            font-size: 1rem;
+        }
+
+        .user {
+            background-color: #AEEFFF;
+            color: #000000;
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        .bot {
+            background-color: #C084FC;
+            color: #000000;
+            align-self: flex-start;
+            text-align: left;
+        }
+
+        .chat-message {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group input {
+            background-color: #0E254C;
+            color: #fff;
+            border: 1px solid #AEEFFF;
+        }
+
+        .input-group input::placeholder {
+            color: #AAAAAA;
+        }
+
+        .btn-send {
+            background-color: #AEEFFF;
+            color: #000;
+            border: none;
+        }
+
+        .btn-send:hover {
+            background-color: #00dddd;
+        }
+    </style>
 </head>
 <body>
-    <h1>Preguntale al chatbot</h1>
-    <form method="post">
-        <label for="question">Escribí tu pregunta:</label><br/>
-        <input type="text" id="question" name="question" size="60" required
-            value="{{ question if question else '' }}" />
-        <button type="submit">Enviar</button>
-    </form>
+    <div class="container py-4">
+        <h1 class="text-center mb-4" style="color: #AEEFFF;">🤖 Promtior Chatbot </h1>
 
-    {% if answer %}
-        <h2>Respuesta:</h2>
-        <p>{{ answer }}</p>
-    {% endif %}
+        <div class="chat-box d-flex flex-column mb-4">
+            {% for item in history %}
+                <div class="chat-message align-self-end">
+                    <div class="chat-bubble user">
+                        {{ item.question }}
+                    </div>
+                </div>
+                <div class="chat-message align-self-start">
+                    <div class="chat-bubble bot">
+                        {{ item.answer }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <form method="post" class="mx-auto" style="max-width: 800px;">
+            <div class="input-group">
+                <input
+                    type="text"
+                    id="question"
+                    name="question"
+                    class="form-control form-control-lg"
+                    required
+                    placeholder="Ask a question..."
+                />
+                <button type="submit" class="btn btn-send btn-lg">Send</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.onload = function () {
+            const chatBox = document.querySelector('.chat-box');
+            if (chatBox) {
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        };
+    </script>
 </body>
 </html>
