@@ -9,55 +9,55 @@ from langchain.embeddings import HuggingFaceEmbeddings
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent
 
-# Cargar variables de entorno
+# Load environment variables
 load_dotenv()
 
-# Leer variables
+# Read variables from env.
 urls = os.getenv("SCRAPE_URLS", "").split(",")
 pdf_path = BASE_DIR / os.getenv("PDF_PATH", "AI Engineer.pdf")
 index_path = os.getenv("VECTOR_INDEX_PATH", "promtior_index")
 
-# Inicializar lista de documentos
+# Initialize document list
 all_docs = []
 
-# Cargar desde URLs
+# Load from URLs
 for url in urls:
-    print(f"Cargando contenido de: {url}")
+    print(f"Loading content from: {url}")
     try:
         loader = WebBaseLoader(url)
         docs = loader.load()
         all_docs.extend(docs)
     except Exception as e:
-        print(f"Error al cargar {url}: {e}")
+        print(f"Error loading {url}: {e}")
 
-# Cargar desde PDF
+# Load from PDF
 if pdf_path and os.path.exists(pdf_path):
-    print(f"Cargando contenido del PDF: {pdf_path}")
+    print(f"Loading content from PDF: {pdf_path}")
     try:
-
         pdf_loader = PyPDFLoader(pdf_path)
+        pages = pdf_loader.load()
+        # Only includes page 3 - About Us (índex 2)
+        all_docs.append(pages[2])
+        """
+        #include all the pdf
         pdf_docs = pdf_loader.load()
         all_docs.extend(pdf_docs)
         """
-        loader = PyPDFLoader(pdf_path)
-        pages = loader.load()
-        # Solo incluir la página 3 About Us (índice 20)
-        docs.append(pages[2])"""
     except Exception as e:
-        print(f"Error al cargar PDF '{pdf_path}': {e}")
+        print(f"Error loading PDF '{pdf_path}': {e}")
 else:
-    print("No se encontró el PDF o no se especificó.")
+    print("PDF wasn`t found or specified.")
 
-# Dividir documentos en fragmentos
-print("Dividiendo documentos...")
-splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+# Split documents into fragments
+print("Splitting documents...")
+splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=50)
 chunks = splitter.split_documents(all_docs)
 
-# Crear embeddings y FAISS index
-print("Generando embeddings...")
+# Creating embeddings and FAISS index
+print("Generating embeddings...")
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 vectorstore = FAISS.from_documents(chunks, embeddings)
 
-# Guardar índice
+# Save índex
 vectorstore.save_local(index_path)
-print(f"Índice guardado en: {index_path}")
+print(f"Index saved in: {index_path}")

@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from langserve import add_routes
+from uuid import uuid4
 
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -15,24 +16,24 @@ from langchain_together import Together
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent
 
-# Cargar variables de entorno\load_dotenv = load_dotenv
+# Load environment variables
 load_dotenv()
 
-# Configuración desde .env
+# Read variables from .env
 index_path = os.getenv("VECTOR_INDEX_PATH", "promtior_index")
 
-# Plantillas y FastAPI\BASE_DIR = Path(__file__).parent
+# Templates and FastAPI
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 app = FastAPI()
 
-# Preparar o cargar índice FAISS
+# Load FAISS index
 def get_vectorstore():
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    print("Índice encontrado, cargando...")
+    print("Index found, loading...")
     vs = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
     return vs
 
-# Instanciar vectorstore, LLM y RAG chain
+# Instantiate vectorstore, LLM and RAG chain
 vectorstore = get_vectorstore()
 llm = Together(
     model="meta-llama/Llama-3-8b-chat-hf",
@@ -46,24 +47,43 @@ rag_chain = RetrievalQA.from_chain_type(
     retriever=vectorstore.as_retriever(),
     return_source_documents=True
 )
-# Agregar ruta RAG
+# Add RAG route
 add_routes(app, rag_chain, path="/chat")
 
-chat_history = []
+# Chat Histories per session
+chat_histories = {}
+
 
 @app.get("/", response_class=HTMLResponse)
-def read_form(request: Request):
-    return templates.TemplateResponse("form.html", {"request": request, "history": chat_history})
+async def read_form(request: Request):
+    # Generar un session_id único
+    session_id = str(uuid4())
+    # Inicializar historial para esta sesión
+    chat_histories[session_id] = []
+
+    return templates.TemplateResponse("form.html", {
+        "request": request,
+        "history": [],
+        "session_id": session_id
+    })
+
 
 @app.post("/", response_class=HTMLResponse)
-def handle_form(request: Request, question: str = Form(...)):
+async def handle_form(request: Request, question: str = Form(...), session_id: str = Form(...)):
+    # Obtener o inicializar historial de la sesión
+    history = chat_histories.get(session_id, [])
+
+    # Obtener respuesta del RAG
     output = rag_chain.invoke({"query": question})
     answer = output.get("result")
 
-    # Agregar a historial
-    chat_history.append({"question": question, "answer": answer})
+    # Guardar en historial
+    history.append({"question": question, "answer": answer})
+    chat_histories[session_id] = history
 
-    return templates.TemplateResponse(
-        "form.html",
-        {"request": request, "history": chat_history}
-    )
+    return templates.TemplateResponse("form.html", {
+        "request": request,
+        "history": history,
+        "session_id": session_id
+    })
+
