@@ -1,20 +1,38 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import logging
+from uuid import uuid4
 
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from langserve import add_routes
-from uuid import uuid4
+
 
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.chains import RetrievalQA
 from langchain_together import Together
 
+
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent
+
+# Ruta absoluta al archivo de log
+log_file_path = os.path.join(BASE_DIR, "log", "app.log")
+
+#Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(log_file_path),  # log a un archivo
+        logging.StreamHandler()              # log a consola
+    ]
+)
+logger = logging.getLogger(__name__)
+
 
 # Load environment variables
 load_dotenv()
@@ -29,7 +47,7 @@ app = FastAPI()
 # Load FAISS index
 def get_vectorstore():
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-    print("Index found, loading...")
+    logger.info("Index found, loading...")
     vs = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
     return vs
 
@@ -70,12 +88,14 @@ async def read_form(request: Request):
 
 @app.post("/", response_class=HTMLResponse)
 async def handle_form(request: Request, question: str = Form(...), session_id: str = Form(...)):
+    logger.info(f"Received question: {question}")
     # Obtener o inicializar historial de la sesión
     history = chat_histories.get(session_id, [])
 
     # Obtener respuesta del RAG
     output = rag_chain.invoke({"query": question})
     answer = output.get("result")
+    logger.info(f"Generated answer: {answer}")
 
     # Guardar en historial
     history.append({"question": question, "answer": answer})

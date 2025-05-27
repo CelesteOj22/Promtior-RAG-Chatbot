@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import logging
 from langchain_community.document_loaders import WebBaseLoader, PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
@@ -9,6 +10,20 @@ from langchain.embeddings import HuggingFaceEmbeddings
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent
 ROOT_DIR = Path(__file__).resolve().parent.parent
+
+# Ruta absoluta al archivo de log
+log_file_path = os.path.join(ROOT_DIR, "log", "app.log")
+
+#Logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(log_file_path),  # log a un archivo
+        logging.StreamHandler()          # log a consola
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -23,17 +38,17 @@ all_docs = []
 
 # Load from URLs
 for url in urls:
-    print(f"Loading content from: {url}")
+    logger.info(f"Loading content from: {url}")
     try:
         loader = WebBaseLoader(url)
         docs = loader.load()
         all_docs.extend(docs)
     except Exception as e:
-        print(f"Error loading {url}: {e}")
+        logger.error(f"Error loading {url}: {e}")
 
 # Load from PDF
 if pdf_path and os.path.exists(pdf_path):
-    print(f"Loading content from PDF: {pdf_path}")
+    logger.info(f"Loading content from PDF: {pdf_path}")
     try:
         pdf_loader = PyPDFLoader(pdf_path)
         pages = pdf_loader.load()
@@ -45,20 +60,20 @@ if pdf_path and os.path.exists(pdf_path):
         all_docs.extend(pdf_docs)
         """
     except Exception as e:
-        print(f"Error loading PDF '{pdf_path}': {e}")
+        logger.error(f"Error loading PDF '{pdf_path}': {e}")
 else:
-    print("PDF wasn`t found or specified.")
+    logger.error("PDF wasn`t found or specified.")
 
 # Split documents into fragments
-print("Splitting documents...")
+logger.info("Splitting documents...")
 splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=50)
 chunks = splitter.split_documents(all_docs)
 
 # Creating embeddings and FAISS index
-print("Generating embeddings...")
+logger.info("Generating embeddings...")
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 vectorstore = FAISS.from_documents(chunks, embeddings)
 
 # Save índex
 vectorstore.save_local(index_path)
-print(f"Index saved in: {index_path}")
+logger.info(f"Index saved in: {index_path}")

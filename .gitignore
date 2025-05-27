@@ -6,3 +6,4 @@ __pycache__/
 promtior_index/
 *.pem
 .idea/
+log/
