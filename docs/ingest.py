@@ -8,6 +8,7 @@ from langchain.embeddings import HuggingFaceEmbeddings
 
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent
+ROOT_DIR = Path(__file__).resolve().parent.parent
 
 # Load environment variables
 load_dotenv()
@@ -15,7 +16,7 @@ load_dotenv()
 # Read variables from env.
 urls = os.getenv("SCRAPE_URLS", "").split(",")
 pdf_path = BASE_DIR / os.getenv("PDF_PATH", "AI Engineer.pdf")
-index_path = os.getenv("VECTOR_INDEX_PATH", "promtior_index")
+index_path = ROOT_DIR / os.getenv("VECTOR_INDEX_PATH", "promtior_index")
 
 # Initialize document list
 all_docs = []
