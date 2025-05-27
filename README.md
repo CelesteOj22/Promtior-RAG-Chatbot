@@ -1,14 +1,14 @@
-# Promtior RAG Chatbot - Technical Test
+# 🦾Promtior RAG Chatbot - Technical Test
 
-## Technical requirements
+## 📄 Technical requirements
 ### Functionality
 * The chatbot should be able to answer the following questions:
 - What services does Promtior offer?
 - When was the company founded?
 
-### Technologies to be used
-* Implement the solution using LangChainwith Langserve:
-* Use the OpenAI API if you have a subscription, otherwise, you can use Ollamaand LlaMA2 as explained in the LangChain documentation.
+### ⚡ Technologies to be used
+* Implement the solution using LangChain with Langserve:
+* Use the OpenAI API if you have a subscription, otherwise, you can use Ollama and LlaMA2 as explained in the LangChain documentation.
 
 ### Deployment
 * Deploy the solution on a cloud of your choice (AWS, Azure).
